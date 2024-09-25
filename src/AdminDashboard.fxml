@@ -2,43 +2,32 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
 
 <BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="AdminDashboardController">
-    <top>
-        <HBox spacing="10.0">
+    <left>
+        <VBox spacing="10.0" style="-fx-background-color: #f0f0f0;">
             <padding>
                 <Insets topRightBottomLeft="10.0"/>
             </padding>
-            <Label text="Admin Dashboard" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
-        </HBox>
+            <Button text="Add Student" onAction="#handleAddStudent"/>
+            <Button text="Refresh" onAction="#handleRefresh"/>
+            <Label text="Classes" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+        </VBox>
+    </left>
+    <top>
+        <Label text="Admin Dashboard" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
     </top>
     <center>
-        <TableView fx:id="studentTable" prefHeight="200.0" prefWidth="600.0">
-            <columns>
-                <TableColumn fx:id="idColumn" text="ID" prefWidth="50.0" />
-                <TableColumn fx:id="nameColumn" text="Name" prefWidth="150.0" />
-                <TableColumn fx:id="classColumn" text="Class" prefWidth="100.0" />
-                <TableColumn fx:id="phoneColumn" text="Phone Number" prefWidth="150.0" />
-            </columns>
-        </TableView>
-    </center>
-    <bottom>
-        <HBox spacing="10.0" alignment="CENTER">
+        <FlowPane fx:id="classCardPane" hgap="10" vgap="10">
             <padding>
                 <Insets topRightBottomLeft="10.0"/>
             </padding>
-            <Button text="Add Student" onAction="#handleAddStudent" />
-            <Button text="Update Student" onAction="#handleUpdateStudent" />
-            <Button text="Delete Student" onAction="#handleDeleteStudent" />
-            <Button text="Refresh" onAction="#handleRefresh" />
-        </HBox>
-    </bottom>
+            <!-- Class Cards will be added here dynamically -->
+        </FlowPane>
+    </center>
 </BorderPane>

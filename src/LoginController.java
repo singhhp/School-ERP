@@ -50,7 +50,7 @@ public class LoginController {
 
             // Load the main window (AdminDashboard.fxml)
             Stage primaryStage = new Stage();
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("AdminDashboard.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/AdminDashboard.fxml"));
             Parent root = loader.load();
             primaryStage.setTitle("Admin Dashboard");
             primaryStage.setScene(new Scene(root));

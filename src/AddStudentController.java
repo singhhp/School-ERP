@@ -25,6 +25,8 @@ public class AddStudentController {
         this.studentDAO = studentDAO;
     }
 
+
+
     // Setter for AdminDashboardController to refresh data after adding
     public void setAdminDashboardController(AdminDashboardController controller) {
         this.adminDashboardController = controller;

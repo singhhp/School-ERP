@@ -11,6 +11,18 @@ public class Attendance {
         this.date = date;
         this.status = status;
     }
+    public int getStudentId() {
+        return studentId;
+    }
+
+
+    public String getDate() {
+        return date;
+    }
+
+    public String getStatus() {
+        return status;
+    }
 
     // Getters and Setters...
 }

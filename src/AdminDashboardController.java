@@ -1,149 +1,125 @@
-// AdminDashboardController.java
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.layout.FlowPane;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.Modality;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
+import java.sql.*;
 import java.io.IOException;
-import java.util.List;
 
 public class AdminDashboardController {
-
     @FXML
-    private TableView<Student> studentTable;
+    private FlowPane classCardPane;
 
-    @FXML
-    private TableColumn<Student, Integer> idColumn;
+    private Connection connection;
+    private StudentDAO studentDAO;  // StudentDAO instance
 
-    @FXML
-    private TableColumn<Student, String> nameColumn;
+    public AdminDashboardController() {
+        try {
+            // Database connection setup
+            String url = "jdbc:mysql://localhost:3306/attendance_db"; // Replace with your database URL
+            String user = "root"; // Replace with your database username
+            String password = "Hps@7892804255"; // Replace with your database password
+            connection = DriverManager.getConnection(url, user, password);
 
-    @FXML
-    private TableColumn<Student, String> classColumn;
-
-    @FXML
-    private TableColumn<Student, String> phoneColumn;
-
-    private StudentDAO studentDAO = new StudentDAO();
-
-    private ObservableList<Student> studentList = FXCollections.observableArrayList();
+            // Initialize StudentDAO
+            studentDAO = new StudentDAO(connection);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
     @FXML
     public void initialize() {
-        // Initialize the columns
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
-        nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
-        classColumn.setCellValueFactory(new PropertyValueFactory<>("className"));
-        phoneColumn.setCellValueFactory(new PropertyValueFactory<>("phoneNumber"));
-
-        // Load student data
-        loadStudentData();
+        loadClassCards();
     }
 
-    private void loadStudentData() {
-        studentList.clear();
-        List<Student> students = studentDAO.getAllStudents();
-        studentList.addAll(students);
-        studentTable.setItems(studentList);
+    private void loadClassCards() {
+        try {
+            String query = "SELECT DISTINCT class FROM students"; // Query to fetch distinct classes
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while (resultSet.next()) {
+                String className = resultSet.getString("class");
+                addClassCard(className);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void addClassCard(String className) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("ClassCard.fxml"));
+            AnchorPane card = loader.load();
+            ClassCardController cardController = loader.getController();
+            cardController.setClassName(className);
+            cardController.setAdminDashboardController(this);
+            classCardPane.getChildren().add(card);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
-    private void handleAddStudent(ActionEvent event) {
+    public void handleAddStudent() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("AddStudent.fxml"));
-            Parent root = loader.load();
+            GridPane addStudentView = loader.load();
 
-            // Pass the studentDAO to the AddStudentController
-            AddStudentController controller = loader.getController();
-            controller.setStudentDAO(studentDAO);
-            controller.setAdminDashboardController(this);
+            // Get the controller of AddStudent.fxml
+            AddStudentController addStudentController = loader.getController();
+            addStudentController.setStudentDAO(studentDAO);  // Inject StudentDAO into the AddStudentController
 
             Stage stage = new Stage();
             stage.setTitle("Add Student");
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setScene(new Scene(root));
-            stage.showAndWait();
-
-            // Refresh the table after adding
-            loadStudentData();
+            stage.setScene(new Scene(addStudentView));
+            stage.show();
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not load Add Student window.");
         }
     }
 
     @FXML
-    private void handleUpdateStudent(ActionEvent event) {
-        Student selectedStudent = studentTable.getSelectionModel().getSelectedItem();
-        if (selectedStudent == null) {
-            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a student to update.");
-            return;
-        }
+    public void handleRefresh() {
+        classCardPane.getChildren().clear();
+        loadClassCards();
+    }
 
+    // Method to show attendance for a specific class
+    public void showAttendanceForClass(String className) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("UpdateStudent.fxml"));
-            Parent root = loader.load();
-
-            // Pass the selected student and studentDAO to the UpdateStudentController
-            UpdateStudentController controller = loader.getController();
-            controller.setStudentDAO(studentDAO);
-            controller.setAdminDashboardController(this);
-            controller.setStudent(selectedStudent);
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("Attendance.fxml"));
+            AnchorPane attendanceView = loader.load();
+            AttendanceController attendanceController = loader.getController();
+            attendanceController.loadAttendanceForClass(className); // Load attendance data for the class
 
             Stage stage = new Stage();
-            stage.setTitle("Update Student");
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setScene(new Scene(root));
-            stage.showAndWait();
-
-            // Refresh the table after updating
-            loadStudentData();
+            stage.setTitle("Attendance Records for " + className);
+            stage.setScene(new Scene(attendanceView));
+            stage.show();
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not load Update Student window.");
         }
     }
 
-    @FXML
-    private void handleDeleteStudent(ActionEvent event) {
-        Student selectedStudent = studentTable.getSelectionModel().getSelectedItem();
-        if (selectedStudent == null) {
-            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a student to delete.");
-            return;
+    // Method to show students for a specific class
+    public void showStudentsForClass(String className) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("StudentViewController.fxml"));  // Corrected FXML file name
+            AnchorPane studentsView = loader.load();
+            StudentsViewController studentsViewController = loader.getController();
+            studentsViewController.loadStudentsForClass(className); // Load students for the class
+
+            Stage stage = new Stage();
+            stage.setTitle("Students in " + className);
+            stage.setScene(new Scene(studentsView));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmationAlert.setTitle("Delete Confirmation");
-        confirmationAlert.setHeaderText(null);
-        confirmationAlert.setContentText("Are you sure you want to delete student: " + selectedStudent.getName() + "?");
-
-        confirmationAlert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                studentDAO.deleteStudent(selectedStudent.getId());
-                showAlert(Alert.AlertType.INFORMATION, "Success", "Student deleted successfully.");
-                loadStudentData();
-            }
-        });
-    }
-
-    @FXML
-    private void handleRefresh(ActionEvent event) {
-        loadStudentData();
-    }
-
-    // Utility method for showing alerts
-    private void showAlert(Alert.AlertType alertType, String title, String message) {
-        Alert alert = new Alert(alertType);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
     }
 }
